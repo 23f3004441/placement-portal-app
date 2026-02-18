@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login | Placement Portal</title>
+</head>
+<body>
+    
+    {% if message %}
+        <p style="color: red;">{{ message }}</p>
+    {% endif %}
+
+    <h1>Login</h1>
+
+    <form method="POST" action="{{ url_for('login') }}">
+        <label for="email">Email / Username</label><br>
+        <input type="text" id="email" name="email" required><br><br>
+
+        <label for="password">Password</label><br>
+        <input type="password" id="password" name="password" required><br><br>
+
+        <button type="submit">Login</button>
+    </form>
+
+    <p>
+        Don’t have an account?
+        <a href="/register_student">Register as Student</a> |
+        <a href="/register_company">Register as Company</a>
+    </p>
+
+    <p>
+        <a href="/">Back to Home</a>
+    </p>
+
+</body>
+</html>

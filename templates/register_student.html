@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Student Registration</title>
+</head>
+<body>
+
+    {% if message %}
+        <p style="color: red;">{{ message }}</p>
+    {% endif %}
+
+    <h2>Student Registration</h2>
+
+    <form method="POST" enctype="multipart/form-data"> 
+        <!--enctype=multipart/form-data splits the request body 
+        into parts. (for fields, files etc.) only encoding that 
+        supports fileuploads -->
+
+        <label>Name</label><br>
+        <input type="text" name="name" required maxlength="100"><br><br>
+
+        <label>Email</label><br>
+        <input type="email" name="email" required><br><br>
+
+        <label>Password</label><br>
+        <input type="password" name="password" required minlength="6"><br><br>
+
+        <label>Phone</label><br>
+        <input type="text" name="phone" maxlength="10"><br><br>
+
+        <label>Education</label><br>
+        <input type="text" name="education" maxlength="500"><br><br>
+
+        <label>Skills</label><br>
+        <input type="text" name="skills" maxlength="200"><br><br>
+
+        <label>Resume</label><br>
+        <input type="file" name="resume" accept=".pdf,.doc,.docx"><br><br>
+
+        <button type="submit">Register</button>
+
+    </form>
+
+</body>
+</html>
