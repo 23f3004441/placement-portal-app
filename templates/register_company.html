@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Company Registration</title>
+</head>
+<body>
+
+    {% if message %}
+        <p style="color: red;">{{ message }}</p>
+    {% endif %}
+
+    <h2>Company Registration</h2>
+
+    <form method="POST">
+
+        <label>Company Name</label><br>
+        <input type="text" name="name" required maxlength="100"><br><br>
+
+        <label>Email</label><br>
+        <input type="email" name="email" required><br><br>
+
+        <label>Password</label><br>
+        <input type="password" name="password" required minlength="6"><br><br>
+
+        <label>Industry</label><br>
+        <input type="text" name="industry" maxlength="100"><br><br>
+
+        <label>Contact</label><br>
+        <input type="text" name="contact" maxlength="20"><br><br>
+
+        <label>Description</label><br>
+        <textarea name="description" maxlength="500"></textarea><br><br>
+
+        <button type="submit">Register</button>
+
+    </form>
+</body>
+</html>
