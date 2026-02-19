@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard</title>
+</head>
+<body>
+    <h1>Welcome, Admin</h1>
+    <h2>System Overview</h2> <br><br>
+    
+    <section class="stats_section">
+        <div class="wrapper">
+            <div class="one card">
+                <h3>Total Students</h3>
+                <p style="color: black; font-size: 30px;">{{ total_students }}</p>
+                <a href="{{ url_for('admin_students') }}">View List</a>               
+            </div>
+
+            <div class="two card">
+                <h3>Total Companies</h3>
+                <p style="color: black; font-size: 30px;">{{ total_companies }}</p>
+                <a href="{{ url_for('admin_companies') }}">View List</a>               
+            </div>
+
+            <div class="three card">
+                <h3>Total Drives</h3>
+                <p style="color: black; font-size: 30px;">{{ total_drives }}</p>
+                <a href="{{ url_for('admin_drives') }}">View List</a>               
+            </div>
+
+            <div class="four card">
+                <h3>Total Applications</h3>
+                <p style="color: black; font-size: 30px;">{{ total_applications }}</p>
+                <a href="{{ url_for('admin_applications') }}">View List</a>               
+            </div>
+        </div>
+    </section>
+
+    <br><br>
+    <a href="{{ url_for('logout') }}">LOGOUT</a>
+    
+    <style>
+        *{
+            box-sizing: border-box; /*allows including padding, border
+            in the total area of the element, therefore keeping the size
+            same as specified and not making it bigger than intended.*/
+        }
+        .wrapper{
+            display:grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px; /*so tht the cards dont stick to each other*/
+        }
+        .card{
+            border: 1px solid black;
+            padding:20px;
+            background-color: pink;
+            margin:auto;
+            text-align: center;
+            width: 70%;
+            border-radius: 12%;
+            box-shadow: rgba(0, 0, 0, 0.50) 0px 30px 15px; /*RGB 0, =>black
+            0.50% opacity, offsets hrztnl(shdw moves left/right), vrtcl, 
+            blur radius.*/
+        }
+        h1,h2{
+            text-align: center;
+        }
+    </style>
+</body>
+</html>

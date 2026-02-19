@@ -289,6 +289,23 @@ def login():
     else:
         return render_template('login.html')  
 
+#ADMIN DASHBOARD
+@app.route('/admin_dashboard')
+def admin_dashboard():
+    if 'admin_id' not in session:
+        return redirect(url_for('login'))
+    
+    total_students = Student.query.count()
+    total_companies = Company.query.filter(Company.company_approval_status == CompanyApprovalStatus.APPROVED).count()
+    total_drives = PlacementDrive.query.count()
+    total_applications = Application.query.count()
+
+    return render_template('admin_dashboard.html', 
+    total_students=total_students,
+    total_companies=total_companies,
+    total_applications=total_applications,
+    total_drives=total_drives)
+    
 #LOGOUT
 @app.route('/logout')
 def logout():
