@@ -1,7 +1,10 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
+from sqlalchemy import or_
 from datetime import datetime
+from flask import send_from_directory  #using this to serve/display the resume 
 import enum, os
 
 #creating the Flask App
@@ -305,7 +308,349 @@ def admin_dashboard():
     total_companies=total_companies,
     total_applications=total_applications,
     total_drives=total_drives)
+
+#admin: show list of all companies + search
+@app.route('/admin_companies', methods=["GET"])
+def admin_companies():
+    if 'admin_id' not in session:
+        return redirect(url_for('login'))
     
+    search_query = request.args.get("p","").strip()
+    message = None
+    if search_query:
+
+        if search_query.isdigit():
+            companies = Company.query.filter(Company.company_id == int(search_query)).all()
+
+        else:
+            companies = Company.query.filter(or_(Company.company_name.ilike(f"%{search_query}%"),
+            Company.company_industry.ilike(f"%{search_query}%"))).all()  #because ilike is case insensitive and like is not.          
+
+        if not companies:
+            message = "Does not exist."
+
+    else:
+        companies = Company.query.all()
+
+    return render_template('admin_companies.html', 
+    companies=companies, 
+    search_query=search_query,
+    message=message)  
+
+#ADMIN: VIEW COMPANY DETAILS
+@app.route('/admin_company_detail/<int:company_id>')
+def admin_company_detail(company_id):
+    if 'admin_id' not in session:
+        return redirect(url_for('login'))
+        
+    company = Company.query.get(company_id)
+    return render_template('admin_company_detail.html', company=company)
+
+#admin: approve company
+@app.route('/admin_approve_company/<int:company_id>', methods=['POST'])
+def admin_approve_company(company_id):
+    company = Company.query.get_or_404(company_id) #when a company_id doesnt exist in db, get_or_404 returns 404 instead of throwing attribute error.
+
+    company.company_approval_status = CompanyApprovalStatus.APPROVED
+    company.company_isactive = True
+
+    db.session.commit()
+    
+    return redirect(url_for('admin_companies'))
+
+#admin: reject company
+@app.route('/admin_reject_company/<int:company_id>', methods=['POST'])
+def admin_reject_company(company_id):
+    company = Company.query.get_or_404(company_id)
+
+    company.company_approval_status = CompanyApprovalStatus.REJECTED
+    company.company_isactive = False
+
+    db.session.commit()
+
+    return redirect(url_for('admin_companies'))
+
+#admin: blacklist/unblacklist company
+@app.route('/admin_blacklist_company/<int:company_id>', methods=['POST'])
+def admin_blacklist_company(company_id):
+    company = Company.query.get_or_404(company_id)
+
+    if company.company_isblacklisted:
+        company.company_isblacklisted = False
+
+    else:
+        company.company_isblacklisted = True
+        company.company_isactive = False
+
+    db.session.commit()
+
+    return redirect(url_for('admin_companies'))
+
+#admin: activate/deactivate company
+@app.route('/admin_activate_company/<int:company_id>', methods=['POST'])
+def admin_activate_company(company_id):
+    company = Company.query.get_or_404(company_id)
+
+    if company.company_isblacklisted or company.company_approval_status != CompanyApprovalStatus.APPROVED:
+        return redirect(url_for('admin_companies'))      
+
+    company.company_isactive = not company.company_isactive
+
+    db.session.commit()
+
+    return redirect(url_for('admin_companies'))
+
+#admin: show list of all students + search
+@app.route('/admin_students', methods=['GET'])
+def admin_students():
+        if 'admin_id' not in session:
+        return redirect(url_for('login'))
+    
+    search_query = request.args.get("p","").strip()
+    message = None
+    if search_query:
+
+        if search_query.isdigit():
+            students = Student.query.filter(Student.student_id == int(search_query)).all()
+
+        else:
+            students = Student.query.filter(or_(Student.student_name.ilike(f"%{search_query}%"),
+            Student.student_phone.ilike(f"%{search_query}%")
+            )).all()
+            
+        if not students:
+            message = "Not found."
+
+    else:
+        students=Student.query.all()
+
+    return render_template('admin_students.html', 
+    students=students,
+    message=message,
+    search_query=search_query )    
+ 
+#ADMIN: VIEW STUDENT DETAILS
+@app.route('/admin_student_detail/<int:student_id>')
+def admin_student_detail(student_id):
+    if 'admin_id' not in session:
+        return redirect(url_for('login'))
+
+    student = Student.query.get_or_404(student_id)
+    return render_template("admin_student_detail.html", student=student)
+
+#admin: blacklist student
+@app.route('/admin_blacklist_student/<int:student_id>', methods=['POST'])
+def admin_blacklist_student(student_id):
+
+    student = Student.query.get_or_404(student_id)
+
+    if student.student_isblacklisted:
+        student.student_isblacklisted = False
+    
+    else:
+        student.student_isblacklisted = True
+        student.student_isactive = False
+
+    db.session.commit()
+    return redirect(url_for("admin_students"))
+
+#admin activate/deactivate student
+@app.route('/admin_activate_student/<int:student_id>', methods=['POST'])
+def admin_activate_student(student_id):
+
+    student = Student.query.get_or_404(student_id)
+
+    if student.student_isblacklisted:
+            return redirect(url_for("admin_students"))
+    
+    student.student_isactive = not student.student_isactive
+    db.session.commit()
+    return redirect(url_for("admin_students"))
+
+#ADMIN: DRIVES (VIEW ALL)
+@app.route('/admin_drives')
+def admin_drives():
+    if 'admin_id' not in session:
+        return redirect(url_for('login'))
+    
+    drives = PlacementDrive.query.all()
+    return render_template('admin_drives.html', drives=drives)    
+
+#admin: approve drives 
+@app.route('/admin_approve_drive/<int:drive_id>', methods=['POST'])
+def admin_approve_drive(drive_id):
+    if 'admin_id' not in session:
+        return redirect(url_for('login'))
+
+    drive = PlacementDrive.query.get_or_404(drive_id)
+
+    if drive.drive_status == DriveStatus.PENDING:
+        drive.drive_status = DriveStatus.OPEN
+        db.session.commit()
+    return redirect(url_for('admin_drives'))
+
+#admin: reject drives
+@app.route('/admin_reject_drive/<int:drive_id>', methods=['POST'])
+def admin_reject_drive(drive_id):
+    if 'admin_id' not in session:
+        return redirect(url_for('login'))
+
+    drive = PlacementDrive.query.get_or_404(drive_id)
+
+    if drive.drive_status == DriveStatus.PENDING:
+        drive.drive_status = DriveStatus.CANCELLED
+        db.session.commit()
+    return redirect(url_for('admin_drives')) 
+
+#ADMIN: VIEW DRIVE DETAILS
+@app.route('/admin_drive_detail/<int:drive_id>')
+def admin_drive_detail(drive_id):
+    if 'admin_id' not in session:
+        return redirect(url_for('login'))
+
+    drive = PlacementDrive.query.get_or_404(drive_id)
+    return render_template('admin_drive_detail.html', drive=drive)
+
+#ADMIN:APPLICATIONS
+@app.route('/admin_applications')
+def admin_applications():
+    if 'admin_id' not in session:
+        return redirect(url_for('login'))
+    
+    status_filter = request.args.get('status')
+    query = Application.query
+
+    if status_filter:
+        try:
+            query = query.filter(Application.application_status == ApplicationStatus[status_filter])
+        except KeyError:
+            pass
+        
+    applications = query.all()
+    return render_template('admin_applications.html', applications = applications, current_status = status_filter)    
+
+#COMPANY DASHBOARD
+@app.route('/company_dashboard')
+def company_dashboard():
+    company_id = session.get('company_id')
+    company = Company.query.get(company_id)
+
+    if not company:
+        return redirect(url_for('login'))
+        
+    drives = PlacementDrive.query.filter_by(company_id=company_id).all()
+
+    return render_template('company_dashboard.html', company=company, drives=drives)
+
+#COMPANY: VIEW LIST OF APPLICATIONS FOR A CREATED DRIVE + SHORTLIST/ACCEPT/REJECT STUDENTS + FILTERBY APPLICATION STATUS
+@app.route('/company_applications/<int:drive_id>')
+def company_applications(drive_id):
+    return render_template('company_applications.html', company=company, drives=drives)
+
+#company: shortlist student 
+@app.route('/shortlist_student/<int:application_id>', methods=['POST'])
+def shortlist_student(application_id):
+        return redirect(url_for('company_applications',drive_id=application.placement_drive_id))
+
+#company: accept student
+@app.route('/accept_student/<int:application_id>', methods=['POST'])
+def accept_student(application_id):
+        return redirect(url_for('company_applications',drive_id=application.placement_drive_id))
+
+#company: reject students
+@app.route('/reject_student/<int:application_id>', methods=['POST'])
+def reject_student(application_id):
+        return redirect(url_for('company_applications',drive_id=application.placement_drive_id))
+
+#COMPANY: VIEW DETAILED STUDENT APPLICATION
+@app.route('/application_detail/<int:application_id>')
+def application_detail(application_id):
+        return render_template('application_detail.html', application=application)
+
+#company: view student resume in detailed student application
+@app.route('/view_resume/<path:filename>')
+def view_resume(filename):
+    return render_template('company_dashboard.html', application=application)
+
+#company: open/close drives
+@app.route('/toggle_drive_status/<int:drive_id>', methods=['POST'])
+def toggle_drive_status(drive_id):
+        return redirect(url_for('company_dashboard'))
+
+#company: cancel drive
+@app.route('/cancel_drive/<int:drive_id>', methods=['POST'])
+def cancel_drive(drive_id):
+        return redirect(url_for('company_dashboard'))
+
+#COMPANY: EDIT DRIVE
+@app.route('/edit_drive/<int:drive_id>', methods=['GET','POST'])
+def edit_drive(drive_id):
+        return redirect(url_for('company_dashboard'))
+
+#COMPANY: CREATRE DRIVE
+@app.route('/create_drive', methods=['GET','POST'])
+def create_drive():
+        return render_template('create_drive.html')
+
+#STUDENT DASHBOARD: show list of approved,applied drives + search (by company, jobpos, skills) 
+@app.route('/student_dashboard')
+def student_dashboard():
+    #STUDENT DASHBOARD: show list of approved,applied drives + search (by company, jobpos, skills) 
+@app.route('/student_dashboard')
+def student_dashboard():
+    if 'student_id' not in session:
+        return redirect(url_for('login'))
+
+    student_id = session.get('student_id')
+    student = Student.query.get_or_404(student_id)
+
+    search_query = request.args.get('q','').strip()
+
+    #show all applied drives
+    applications = Application.query.filter_by(student_id=student_id).all()
+
+    applied_drives_ids = [application.placement_drive_id for application in applications]
+
+    #show all approved drives
+    drives_query = PlacementDrive.query.join(Company).join(JobPosition).filter(PlacementDrive.drive_status == DriveStatus.OPEN,
+    PlacementDrive.application_deadline >= datetime.now(),
+    Company.company_approval_status == CompanyApprovalStatus.APPROVED,
+    Company.company_isactive == True,
+    Company.company_isblacklisted == False)
+
+    #show only drives searched for 
+    if search_query:
+        drives_query = drives_query.filter(or_(Company.company_name.ilike(f"%{search_query}%"),
+        JobPosition.job_title.ilike(f"%{search_query}%"),
+        JobPosition.required_skills.ilike(f"%{search_query}%")
+        ))
+
+    #removing already applied drives from approved drives list
+    if applied_drives_ids:
+        drives_query = drives_query.filter(~PlacementDrive.placement_drive_id.in_(applied_drives_ids))
+    
+    drives = drives_query.all()
+
+    return render_template('student_dashboard.html', student=student, 
+    drives = drives,
+    applications = applications, 
+    search_query = search_query)
+
+#STUDENT: APPLY TO A DRIVE
+@app.route('/student_drive/<int:drive_id>', methods=['GET', 'POST'])
+def student_drive(drive_id):
+        return redirect(url_for('student_dashboard'))
+
+#STUDENT: EDIT PROFILE
+@app.route('/student_profile',methods=['GET','POST'])
+def student_profile():
+        return redirect(url_for('student_dashboard'))
+
+#STUDENT: VIEW PLACEMENT HISTORY
+@app.route('/placement_history')
+def placement_history():
+        return render_template('placement_history.html', placements = placements)
+
 #LOGOUT
 @app.route('/logout')
 def logout():
