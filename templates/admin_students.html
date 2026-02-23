@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin: Students</title>
+</head>
+<body>
+    <h1>Students</h1>
+    <br>
+    <form method="GET" action="{{ url_for('admin_students') }}">
+        <input type="text" name="p" placeholder="Search..." value="{{ search_query }}">
+        <button type="submit">Search</button>
+
+        {% if search_query %}
+            <a href="{{ url_for('admin_students') }}">Show All</a>
+        {% endif %}
+    </form>
+
+    {% if message %}
+        <p style="color: red; font-weight: bold;">{{ message }}</p>
+    {% endif %}
+
+    <hr>
+    <br>
+
+    <table>
+        <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>View</th>
+            <th>Blacklist</th>
+            <th>De/activate</th>
+        </tr>
+
+        {% for student in students %}
+        <tr>
+            <td>{{ student.student_name }}</td>
+            <td>{{ student.student_email }}</td>
+            <td>
+                <a href="{{ url_for('admin_student_detail', student_id=student.student_id) }}">View</a> 
+            </td>
+
+            <td>
+                <form method="POST" style="display:inline" action="{{ url_for('admin_blacklist_student', student_id=student.student_id) }}">
+                    {% if not student.student_isblacklisted %}
+                        <button style="color:black; background-color: gray;">Blacklist</button>
+                    {% else %}
+                        <button style="color:white; background-color: black;">Blacklisted</button>
+                    {% endif %}
+                </form>
+            </td>
+
+            <td>
+                <form method="POST" style="display:inline" action="{{ url_for('admin_activate_student', student_id=student.student_id) }}">
+                    {% if student.student_isactive %}
+                        <button style="color:black; background-color: violet;">Deactivate</button>
+                    {% else %}
+                        <button style="color:black; background-color: lightblue;">Activate</button>
+                    {% endif %}
+                </form>
+            </td>
+
+        </tr>
+        {% endfor %}
+    </table>
+    <hr>
+    <br>
+    
+    <a href="{{ url_for('admin_dashboard') }}">Back to Admin Dashboard</a>
+</body> 
+</html>

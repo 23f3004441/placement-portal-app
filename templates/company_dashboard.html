@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Company Dashboard</title>
+    <style>
+        th,td{
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Welcome, {{ company.company_name }}</h1>
+
+    <hr>
+
+    <h2>Company Profile</h2>
+
+    <p><strong>Email:</strong> {{ company.company_email }}</p>
+    <p><strong>Industry:</strong> {{ company.company_industry or "Not provided" }}</p>
+    <p><strong>Contact:</strong> {{ company.company_contact or "Not provided" }}</p>
+    <p><strong>Description:</strong> {{ company.company_description or "Not provided" }}</p>
+
+    <p>
+        <strong>Approval Status:</strong>
+        <em>{{ company.company_approval_status.value }}</em>
+    </p>
+    <hr>
+
+    <h1>CREATED DRIVES</h1>
+    
+        <a href="{{ url_for('create_drive') }}">Create New Placement Drive</a>
+    <br><br>
+
+    {% if drives %}
+    <table>
+        <tr>
+            <th>Job Title</th>
+            <th>Status</th>
+            <th>Total Applications</th>
+            <th>View Applications</th>
+            <th>Open/Close Drive</th>
+            <th>Cancel Drive</th>
+            <th>Edit Drive</th>
+        </tr>
+
+        {% for drive in drives %}
+        <tr>
+            <td>{{ drive.job_position.job_title }}</td>
+            <td>{{ drive.drive_status.value }}</td>
+            <td>{{ drive.applications | length }}</td>
+
+            <td>
+                <a href="{{ url_for('company_applications', drive_id=drive.placement_drive_id) }}">View</a>
+            </td>
+
+            <td>
+                <form method="POST" style="display:inline;" action="{{ url_for('toggle_drive_status', drive_id=drive.placement_drive_id) }}">
+                    {% if drive.drive_status.name == 'OPEN' %}
+                        <button style="background-color:lightpink; color:black;">
+                            Close
+                        </button>
+                    {% elif drive.drive_status.name == 'CLOSED' %}
+                        <button style="background-color:lightblue; color:black;">
+                            Open
+                        </button>
+                    {% elif drive.drive_status.name == 'PENDING' %}
+                        <button style="background-color:orange; color:black;">
+                            Await Admin Approval
+                        </button>
+                    {% elif drive.drive_status.name == 'CANCELLED' %}
+                        <button disabled style="background-color: black; color:white;">
+                            Cancelled
+                        </button>
+                    {% endif %}
+                </form>
+            </td>
+
+            <td>
+                {% if drive.drive_status.name in ['OPEN', 'CLOSED'] %}
+                    <form method="POST" style="display:inline;" action="{{ url_for('cancel_drive', drive_id=drive.placement_drive_id) }}">
+                        <button style="background-color:red;">Cancel</button>
+                    </form>
+                {% else %}
+                    <button disabled>--------</button>
+                {% endif %}
+            </td>
+
+            <td><a href="{{ url_for('edit_drive', drive_id=drive.placement_drive_id) }}">Edit</a></td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% endif %}
+
+    <br><br><br>
+    <a href="{{ url_for('logout') }}">LOGOUT</a>
+
+</body>
+</html>

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Student Dashboard</title>
+    <style>
+        th,td{
+            text-align: center;
+        }
+
+        .notification-banner{
+            background-color: lightcoral;
+            border: 1px solid black;
+            padding: 10px;
+            margin: 20px;
+            border-radius: 6px;
+            color: black;
+        }
+    </style>
+</head>
+<body>
+    <h1>Welcome, {{ student.student_name }}</h1>
+
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div class="notification-banner">
+                <ul>
+                    {% for message in messages %}
+                        <li>{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <h2>Approved Placement Drives</h2>
+    <br>
+    <form method="GET" action="{{ url_for('student_dashboard') }}">
+        <input type="text" placeholder="Search..." name="q" value="{{ search_query or '' }}">
+        <button type="submit">Search</button>
+    </form>
+    <br>
+
+    {% if search_query %}
+        <a href="{{ url_for('student_dashboard') }}">Show All</a>
+    {% endif %}
+    
+
+    {% if drives %}
+    <table>
+        <tr>
+            <th>Company</th>
+            <th>Position</th>
+            <th>Experience Required</th>
+            <th>Application Deadline</th>
+            <th>Apply</th>
+        </tr>
+
+        {% for drive in drives %}
+        <tr>
+            <td>{{ drive.company.company_name }}</td>
+            <td>{{ drive.job_position.job_title }}</td>
+            <td>{{ drive.job_position.experience_required }}</td>
+            <td>{{ drive.application_deadline.strftime('%d-%m-%Y') if drive.application_deadline else 'N/A' }}</td> <!--strftime is a method on py datetime obj, (String format time)-->
+
+            <td>
+                <form method="GET" action="{{ url_for('student_drive', drive_id=drive.placement_drive_id) }}">
+                    <button type="submit" style="background-color: aquamarine;">Apply</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    {% else %}
+       <p>No drives available.</p>
+    {% endif %}
+
+    <hr><br>
+
+    <h2>Applied Drives</h2>
+
+    {% if applications %}
+    <table>
+        <tr>
+            <th>Company</th>
+            <th>Position</th>
+            <th>Status</th>
+        </tr>
+
+        {% for application in applications %}
+        <tr>
+            <td>{{ application.placement_drive.company.company_name }}</td>
+            <td>{{ application.placement_drive.job_position.job_title }}</td>
+            <td>{{ application.application_status.value }}</td>
+        </tr>
+        {% endfor %}
+
+    {% else %}
+        <p>You have not applied to any placement drives yet. </p>
+    {% endif %}
+    </table>
+    <hr>
+    
+    <br>
+
+    <a href="{{ url_for('placement_history') }}">View Placement History</a><br>
+    <a href="{{ url_for('student_profile') }}">Edit/Update Profile</a><br><br>
+
+    <a href="{{ url_for('logout') }}">LOGOUT</a><br>
+
+</body>
+</html>

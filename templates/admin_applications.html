@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin: Applications</title>
+</head>
+<body>
+    <h1>Student Applications</h1>
+    <form method="GET" action="{{ url_for('admin_applications') }}">
+        <label>Filter by Status</label>
+        <select name="status" onchange="this.form.submit()">
+            <option value="">All</option>
+            <option value="APPLIED" {{ 'selected' if current_status == 'APPLIED' else '' }}>Applied</option>
+            <option value="SHORTLISTED" {{ 'selected' if current_status == 'SHORTLISTED' else '' }}>Shortlisted</option>
+            <option value="ACCEPTED" {{ 'selected' if current_status == 'ACCEPTED' else '' }}>Accepted</option>
+            <option value="REJECTED" {{ 'selected' if current_status == 'REJECTED' else '' }}>Rejected</option>
+        </select>
+    </form>
+
+    <br>
+    {% if applications %}
+    <table>
+        <tr>
+            <th>Student Name</th>
+            <th>Company Name</th>
+            <th>Job Title</th>
+            <th>Application Status</th>
+        </tr>
+
+        {% for application in applications %}
+        <tr>
+            <td>{{ application.student.student_name }}</td>
+            <td>{{ application.placement_drive.company.company_name }}</td>
+            <td>{{ application.placement_drive.job_position.jon_title }}</td>
+            <td>{{ application.application_status.value }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% else %}
+    <p>No applications found.</p>
+    {% endif %}
+
+    <br><br>
+    <a href="{{ url_for('admin_dashboard') }}">Back to Dashboard</a>
+</body>
+</html>

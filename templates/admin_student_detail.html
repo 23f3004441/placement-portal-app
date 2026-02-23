@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Student Details</title>
+    <style>
+        th, td {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Student Details</h1>
+
+    <h2>Basic Information</h2>
+    <p><strong>Name:</strong> {{ student.student_name }}</p>
+    <p><strong>Email:</strong> {{ student.student_email }}</p>
+    <p><strong>Phone:</strong> {{ student.student_phone or "Not specified" }}</p>
+    <p><strong>Education:</strong> {{ student.student_education or "Not specified" }}</p>
+    <p><strong>Skills:</strong> {{ student.student_skills or "Not specified" }}</p>
+
+    {% if student.student_resume_path %}
+    <p>
+        <strong>Resume:</strong>
+        <a href="{{ url_for('view_resume', filename=student.student_resume_path) }}">View Resume</a>
+    </p>
+
+    {% else %}
+    <p><strong>Resume:</strong> Not uploaded</p>
+    {% endif %}
+
+    <h2>Account Status</h2>
+    <p><strong>Active:</strong> {{ "Yes" if student.student_isactive else "No" }}</p>
+    <p><strong>Blacklisted:</strong> {{ "Yes" if student.student_isblacklisted else "No" }}</p>
+
+    <h2>Applications</h2>
+    {% if student.applications %}
+    <table>
+    <tr>
+        <th>Company</th>
+        <th>Job Title</th>
+        <th>Status</th>
+        <th>Applied On</th>
+    </tr>
+
+    {% for application in student.applications %}
+    <tr>
+        <td>{{ application.placement_drive.company.company_name }}</td>
+        <td>{{ application.placement_drive.job_position.job_title }}</td>
+        <td>{{ application.application_status.value }}</td>
+        <td>{{ application.application_date.strftime('%Y-%m-%d') }}</td>
+    </tr>
+    {% endfor %}
+    </table>
+
+    {% else %}
+    <p>No applications yet.</p>
+    {% endif %}
+    <br>
+    <a href="{{ url_for('admin_students') }}">Back to Students</a>
+</body>
+</html>

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Company Details</title>
+    <style>
+        th, td {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Company Details</h1>
+
+    <h2>Basic Information</h2>
+    <p><strong>Name:</strong> {{ company.company_name }}</p>
+    <p><strong>Email:</strong> {{ company.company_email }}</p>
+    <p><strong>Industry:</strong> {{ company.company_industry or "Not specified" }}</p>
+    <p><strong>Contact:</strong> {{ company.company_contact or "Not specified" }}</p>
+    <p><strong>Description:</strong> {{ company.company_description or "Not specified" }}</p>
+
+    <h2>Status Information</h2>
+    <p><strong>Approval Status:</strong> {{ company.company_approval_status.value }}</p>
+    <p><strong>Active:</strong> {{ "Yes" if company.company_isactive else "No" }}</p>
+    <p><strong>Blacklisted:</strong> {{ "Yes" if company.company_isblacklisted else "No" }}</p>
+
+    <h2>Placement Drives Created</h2>
+    {% if company.placement_drives %}
+    <table>
+        <tr>
+        <th>Job Title</th>
+        <th>Status</th>
+        <th>Deadline</th>
+        <th>Total Applications</th>
+        <th>View Details</th>
+    </tr>
+
+    {% for drive in company.placement_drives %}
+    <tr>
+        <td>{{ drive.job_position.job_title }}</td>
+        <td>{{ drive.drive_status.value }}</td>
+
+        <td>
+            {% if drive.application_deadline %}
+                {{ drive.application_deadline.strftime('%Y-%m-%d') }}
+            {% else %}
+                No deadline
+            {% endif %}
+        </td>
+
+        <td>{{ drive.applications | length }}</td>
+
+        <td>
+            <a href="{{ url_for('admin_drive_detail', drive_id=drive.placement_drive_id) }}">View</a>
+        </td>
+    </tr>
+    {% endfor %}
+    </table>
+    {% else %}
+    <p>No drives created yet.</p>
+    {% endif %}
+
+    <br>
+    <a href="{{ url_for('admin_companies') }}">Back to Companies</a>
+
+</body>
+</html>

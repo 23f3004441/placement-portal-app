@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin: Companies</title>
+</head>
+<body>
+    <h1>Companies</h1>
+    <br>
+    <form method="GET" action="{{ url_for('admin_companies') }}">
+        <input type="text" name="p" placeholder="Search..." value="{{ search_query }}">
+        <button type="submit">Search</button>
+
+        {% if search_query %}
+            <a href="{{ url_for('admin_companies') }}">Show All</a>
+        {% endif %}
+    </form>
+
+    {% if message %}
+        <p style="color:red; font-weight:bold;">{{ message }}</p>
+    {% endif %}
+
+    <hr>
+
+
+    <h1>Company Applications</h1>
+    
+    <table>
+        <tr>
+            <th>Name</th>
+            <th>Status</th>
+            <th>View</th>
+            <th>Approve</th>
+            <th>Reject</th>
+        </tr>
+
+        {% for company in companies if company.company_approval_status.name == 'PENDING' %}
+        <tr>
+            <td>{{ company.company_name }}</td>            
+            <td>
+                {{ company.company_approval_status.value }}
+                {% if company.company_isblacklisted %}Blacklisted{% endif %}
+                {% if not company.company_isactive %}Inactive{% endif %}           
+            </td>
+
+            <td>
+                <a href="{{ url_for('admin_company_detail', company_id=company.company_id) }}">View</a>
+            </td>
+
+            <td>
+                {% if company.company_approval_status.name != "REJECTED" %}
+                <form method="POST" style="display:inline;" action="{{ url_for('admin_approve_company', company_id=company.company_id) }}">
+                    {% if company.company_approval_status.name == 'APPROVED' %}
+                        <button style='background-color:lightgreen; color:black;'>Approved</button>
+                    {% else %}
+                        <button style="background-color:green; color:black;">Approve</button>
+                    {% endif %}
+                </form>
+                {% endif %}
+            </td>
+
+            <td>
+                {% if company.company_approval_status.name != "APPROVED" %}
+                <form method="POST" style="display:inline;" action="{{ url_for('admin_reject_company', company_id=company.company_id) }}">
+                    {% if company.company_approval_status.name == 'REJECTED' %}
+                        <button style="background-color:red; color:black;">Rejected</button>
+                    {%  else %}
+                        <button style="background-color:lightcoral; color:black;">Reject</button>
+                    {% endif %}
+                </form>
+                {% endif %}
+            </td>
+        </tr>
+        {% else %}
+        <tr>
+            <td colspan="5" style="text-align: center;">NO NEW COMPANY REGISTRATIONS</td>
+        </tr>
+        {% endfor %}
+    </table>
+    <hr>
+    <br>
+
+    <h1>Registered Companies</h1>
+    <table>
+        <tr>
+            <th>Name</th>
+            <th>Status</th>
+            <th>View</th>
+            <th>Blacklist</th>
+            <th>De/activate</th>
+        </tr>
+
+        {% for company in companies %}
+        {% if company.company_approval_status.name == 'APPROVED' %}
+        <tr>
+            <td>{{ company.company_name }}</td>            
+            <td>
+                {{ company.company_approval_status.value }}
+                {% if company.company_isblacklisted %}Blacklisted{% endif %}
+                {% if not company.company_isactive %}Inactive{% endif %}           
+            </td>
+
+            <td>
+                <a href="{{ url_for('admin_company_detail', company_id=company.company_id) }}">View</a>
+            </td>
+
+            <td>
+                <form method="POST" style="display:inline;" action="{{ url_for('admin_blacklist_company', company_id=company.company_id) }}">
+                    {% if not company.company_isblacklisted %}
+                        <button style="background-color:gray; color:black;">Blacklist</button>
+                    {% else %}
+                        <button style="background-color:black; color:white">Blacklisted</button>
+                    {% endif %}
+                </form>
+            </td>
+
+            <td>
+                <form method="POST" style="display:inline;" action="{{ url_for('admin_activate_company', company_id=company.company_id) }}">
+                    {% if company.company_isactive %}
+                        <button style="background-color:violet; color:black">Deactivate</button>
+                    {% else %}
+                        <button style="background-color:lightblue; color:black">Activate</button>
+                    {% endif %}
+                </form>
+            </td>
+        </tr>
+        {% endif %}
+        {% endfor %}
+    </table>
+    <br><br>
+    <a href="{{ url_for('admin_dashboard') }}">Back to Admin Dashboard</a>
+</body>
+</html>

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin: Companies</title>
+    <style>
+        td,th{
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<h1>Ongoing/Upcoming Drives</h1>
+
+    <table>
+        <tr>
+            <th>Company Name</th>
+            <th>Job Title</th>
+            <th>Drive Status</th>
+            <th>Application Deadline</th>
+            <th>View</th>
+            <th>Approve Drive</th>
+            <th>Reject Drive</th>
+        </tr>
+
+        {% for drive in drives %}
+            {% if drive.drive_status.name == 'PENDING' or drive.drive_status.name == 'OPEN'%}
+                <tr>
+                    <td>{{ drive.company.company_name }}</td>
+                    <td>{{ drive.job_position.job_title }}</td>
+                    <td>{{ drive.drive_status.value }}</td>
+
+                    <td>
+                        {% if drive.application_deadline %}
+                            {{ drive.application_deadline }}
+                        {% else %}
+                            --------
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        <a href="{{ url_for('admin_drive_detail', drive_id=drive.placement_drive_id ) }}">View</a>
+                    </td>
+
+                    <td>
+                        {% if drive.drive_status.name == 'PENDING' %}   
+                            <form method="POST" action="{{ url_for('admin_approve_drive', drive_id=drive.placement_drive_id) }}">
+                                <button style="background-color: greenyellow;">Approve</button>
+                            </form>
+                        {% elif drive.drive_status.name == 'OPEN' %}
+                                <button style="background-color: lightgreen;">Approved</button>
+                        {% else %}
+                            <button disabled>--------</button>
+                        {% endif %}
+                    </td>
+
+                    <td>
+                    {% if drive.drive_status.name == 'PENDING' %}   
+                            <form method="POST" action="{{ url_for('admin_reject_drive', drive_id=drive.placement_drive_id) }}">
+                                <button style="background-color: lightcoral;">Reject</button>
+                            </form>
+                    {% elif drive.drive_status.name == 'CANCELLED' %}
+                            <button style="background-color: red;">Rejected</button>
+                    {% else %}
+                        <button disabled>--------</button>
+                    {% endif %}                
+                    </td>
+                </tr>
+            {% endif %}
+        {% endfor %}
+    </table>
+    <br>
+
+    <h1>Past Drives</h1>
+    <table>
+        <tr>
+            <th>Company Name</th>
+            <th>Job Title</th>
+            <th>Drive Status</th>
+            <th>Application Deadline</th>
+        </tr>
+
+        {% for drive in drives %}
+            {% if drive.drive_status.name != 'PENDING' and drive.drive_status.name != 'OPEN'%}
+                <tr>
+                    <td>{{ drive.company.company_name }}</td>
+                    <td>{{ drive.job_position.job_title }}</td>
+                    <td style="color: red;"><strong>{{ drive.drive_status.value }}</strong></td>
+
+                    <td>
+                        {% if drive.application_deadline %}
+                            {{ drive.application_deadline }}
+                        {% else %}
+                            --------
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endif %}
+        {% endfor %}
+    </table>
+    <br>
+    <a href="{{ url_for('admin_dashboard') }}">Back to Admin Dashboard</a>
+</body>
+</html>

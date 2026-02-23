@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Drive Details</title>
+    <style>
+        th, td {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Drive Details</h1>
+
+    <p><strong>Company Name:</strong>{{ drive.company.company_name }}</p>
+    <p><strong>Company Email:</strong>{{ drive.company.company_email }}</p>
+    <p><strong>Company Industry:</strong>{{ drive.company.company_industry or "Not specified." }}</p>
+
+    <h2>Job Information</h2>
+    <p><strong>Job Title:</strong>{{ drive.job_position.job_title }}</p>
+    <p><strong>Required Skills:</strong>{{ drive.job_position.required_skills or "Not specified." }}</p>
+    <p><strong>Experiece Required:</strong>{{ drive.job_position.experience_required or "Not specified." }}</p>
+    <p><strong>Salary Range:</strong>
+    {% if drive.job_position.salary_min and drive.job_position.salary_max %}
+        {{ drive.job_position.salary_min }} - {{ drive.job_position.salary_min }}
+    {% else %}
+        Not specified
+    {% endif %}
+    </p>
+
+    <h2>Drive Information</h2>
+    <p><strong>Status:</strong> {{ drive.drive_status.value }}</p>
+    <p><strong>Application Deadline:</strong>
+    {% if drive.application_deadline %}
+        {{ drive.application_deadline.strftime('%Y-%m-%d %H:%M') }}
+    {% else %}
+        No deadline
+    {% endif %}
+    </p>
+    <p><strong>Eligibility Criteria:</strong> {{ drive.eligibility_criteria or "Not specified" }}</p>
+    <p><strong>Total Applications:</strong> {{ drive.applications | length }}</p>
+
+    {% if drive.applications %}
+    <table>
+    <tr>
+        <th>Student Name</th>
+        <th>Status</th>
+        <th>Applied On</th>
+    </tr>
+
+    {% for application in drive.applications %}
+    <tr>
+        <td>{{ application.student.student_name }}</td>
+        <td>{{ application.application_status.value }}</td>
+        <td>{{ application.application_date.strftime('%Y-%m-%d') }}</td>
+    </tr>
+    {% endfor %}
+    
+    </table>
+    
+    {% else %}
+    <p>No applications yet.</p>
+    {% endif %}
+
+    <br>
+    <a href="{{ url_for('admin_drives') }}">Back to Drives</a>
+
+</body>
+</html>
