@@ -2,27 +2,33 @@
 <html>
 <head>
     <title>Admin: Students</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
-    <h1>Students</h1>
-    <br>
-    <form method="GET" action="{{ url_for('admin_students') }}">
-        <input type="text" name="p" placeholder="Search..." value="{{ search_query }}">
-        <button type="submit">Search</button>
+    <div class="container mt-5"> 
+
+    <h1 class="text-center mb-4">Students</h1>
+    <form method="GET" action="{{ url_for('admin_students') }}" class="row g-2 mb-3">
+        <div class="col-auto">
+            <input type="text" name="p" placeholder="Search..." value="{{ search_query }}" class="form-control">
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-secondary" type="submit">Search</button>
+        </div>
 
         {% if search_query %}
-            <a href="{{ url_for('admin_students') }}">Show All</a>
+            <a class="btn btn-secondary" href="{{ url_for('admin_students') }}">Show All</a>
         {% endif %}
     </form>
 
     {% if message %}
-        <p style="color: red; font-weight: bold;">{{ message }}</p>
+        <p class="alert alert-danger">{{ message }}</p>
     {% endif %}
 
     <hr>
     <br>
 
-    <table>
+    <table class="table table-bordered table-striped table-hover">
         <tr>
             <th>Name</th>
             <th>Email</th>
@@ -36,15 +42,15 @@
             <td>{{ student.student_name }}</td>
             <td>{{ student.student_email }}</td>
             <td>
-                <a href="{{ url_for('admin_student_detail', student_id=student.student_id) }}">View</a> 
+                <a class="btn btn-info btn-sm" href="{{ url_for('admin_student_detail', student_id=student.student_id) }}">View</a> 
             </td>
 
             <td>
-                <form method="POST" style="display:inline" action="{{ url_for('admin_blacklist_student', student_id=student.student_id) }}">
+                <form method="POST" class="d-inline" action="{{ url_for('admin_blacklist_student', student_id=student.student_id) }}">
                     {% if not student.student_isblacklisted %}
-                        <button style="color:black; background-color: gray;">Blacklist</button>
+                        <button class="btn btn-secondary btn-sm">Blacklist</button>
                     {% else %}
-                        <button style="color:white; background-color: black;">Blacklisted</button>
+                        <button class="btn btn-dark btn-sm">Blacklisted</button>
                     {% endif %}
                 </form>
             </td>
@@ -52,9 +58,9 @@
             <td>
                 <form method="POST" style="display:inline" action="{{ url_for('admin_activate_student', student_id=student.student_id) }}">
                     {% if student.student_isactive %}
-                        <button style="color:black; background-color: violet;">Deactivate</button>
+                        <button class="btn btn-warning btn-sm">Deactivate</button>
                     {% else %}
-                        <button style="color:black; background-color: lightblue;">Activate</button>
+                        <button class="btn btn-primary btn-sm">Activate</button>
                     {% endif %}
                 </form>
             </td>
@@ -63,8 +69,8 @@
         {% endfor %}
     </table>
     <hr>
-    <br>
-    
-    <a href="{{ url_for('admin_dashboard') }}">Back to Admin Dashboard</a>
+    <a class="btn btn-secondary" href="{{ url_for('admin_dashboard') }}">Back to Admin Dashboard</a>
+
+    </div>
 </body> 
 </html>

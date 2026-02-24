@@ -1,0 +1,36 @@
+<!DOCTYPE html> 
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Student Details</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    </head>
+    <body>
+        <div class="container mt-5"> 
+
+        <h1 class="text-center mb-4">Student Details:</h1>
+        <h2 class="mt-4 mb-3">Basic Details</h2>
+        <p>Student Name: {{ application.student.student_name }}</p>
+        <p>Student Email ID: {{ application.student.student_email }}</p>
+        <p>Student Phone: {{ application.student.student_phone or "None" }}</p>
+        
+        <h2 class="mt-4 mb-3">Student Profile</h2>
+        <p><strong>Education: {{ application.student.student_education or "None" }}</strong></p>
+        <p><strong>Skills: {{ application.student.student_skills or "None" }} </strong></p>
+        
+        <h2 class="mt-4 mb-3">Student Resume</h2>
+        {% if application.student.student_resume_path %}
+        <a class="btn btn-info btn-sm" href="{{ url_for('view_resume', filename=application.student.student_resume_path) }}">
+            Download Resume
+        </a>
+        {% else %}
+        <p>Resume not available.</p>
+        {% endif %}
+
+        <a class="btn btn-secondary" href="{{ url_for('company_applications', drive_id=application.placement_drive_id) }}">
+            Back to Applications
+        </a>
+
+        </div>
+    </body>
+</html>

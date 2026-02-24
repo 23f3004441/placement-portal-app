@@ -2,57 +2,87 @@
 <html>
 <head>
     <title>Admin: Companies</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
-    <h1>Companies</h1>
-    <br>
-    <form method="GET" action="{{ url_for('admin_companies') }}">
-        <input type="text" name="p" placeholder="Search..." value="{{ search_query }}">
-        <button type="submit">Search</button>
+
+<div class="container mt-5">
+
+    <h1 class="text-center mb-4">Companies</h1>
+
+    <form method="GET" action="{{ url_for('admin_companies') }}" class="row g-3 mb-3">
+
+        <div class="col-auto">
+            <input type="text" name="p" class="form-control"
+                   placeholder="Search..." value="{{ search_query }}">
+        </div>
+
+        <div class="col-auto">
+            <button type="submit" class="btn btn-primary">
+                Search
+            </button>
+        </div>
 
         {% if search_query %}
-            <a href="{{ url_for('admin_companies') }}">Show All</a>
+        <div class="col-auto">
+            <a class="btn btn-secondary" href="{{ url_for('admin_companies') }}">
+                Show All
+            </a>
+        </div>
         {% endif %}
+
     </form>
 
     {% if message %}
-        <p style="color:red; font-weight:bold;">{{ message }}</p>
+        <div class="alert alert-danger">
+            {{ message }}
+        </div>
     {% endif %}
 
     <hr>
 
+    <h2 class="mt-4 mb-3">Company Applications</h2>
 
-    <h1>Company Applications</h1>
-    
-    <table>
-        <tr>
-            <th>Name</th>
-            <th>Status</th>
-            <th>View</th>
-            <th>Approve</th>
-            <th>Reject</th>
-        </tr>
+    <table class="table table-bordered table-striped table-hover">
 
+            <tr>
+                <th>Name</th>
+                <th>Status</th>
+                <th>View</th>
+                <th>Approve</th>
+                <th>Reject</th>
+            </tr>
+            
         {% for company in companies if company.company_approval_status.name == 'PENDING' %}
         <tr>
-            <td>{{ company.company_name }}</td>            
+            <td>{{ company.company_name }}</td>
+
             <td>
                 {{ company.company_approval_status.value }}
-                {% if company.company_isblacklisted %}Blacklisted{% endif %}
-                {% if not company.company_isactive %}Inactive{% endif %}           
+                {% if company.company_isblacklisted %} Blacklisted {% endif %}
+                {% if not company.company_isactive %} Inactive {% endif %}
             </td>
 
             <td>
-                <a href="{{ url_for('admin_company_detail', company_id=company.company_id) }}">View</a>
+                <a class="btn btn-info btn-sm"
+                   href="{{ url_for('admin_company_detail', company_id=company.company_id) }}">
+                   View
+                </a>
             </td>
 
             <td>
                 {% if company.company_approval_status.name != "REJECTED" %}
-                <form method="POST" style="display:inline;" action="{{ url_for('admin_approve_company', company_id=company.company_id) }}">
+                <form method="POST" class="d-inline"
+                      action="{{ url_for('admin_approve_company', company_id=company.company_id) }}">
+
                     {% if company.company_approval_status.name == 'APPROVED' %}
-                        <button style='background-color:lightgreen; color:black;'>Approved</button>
+                        <button class="btn btn-success btn-sm" disabled>
+                            Approved
+                        </button>
                     {% else %}
-                        <button style="background-color:green; color:black;">Approve</button>
+                        <button class="btn btn-success btn-sm">
+                            Approve
+                        </button>
                     {% endif %}
                 </form>
                 {% endif %}
@@ -60,65 +90,92 @@
 
             <td>
                 {% if company.company_approval_status.name != "APPROVED" %}
-                <form method="POST" style="display:inline;" action="{{ url_for('admin_reject_company', company_id=company.company_id) }}">
+                <form method="POST" class="d-inline"
+                      action="{{ url_for('admin_reject_company', company_id=company.company_id) }}">
+
                     {% if company.company_approval_status.name == 'REJECTED' %}
-                        <button style="background-color:red; color:black;">Rejected</button>
-                    {%  else %}
-                        <button style="background-color:lightcoral; color:black;">Reject</button>
+                        <button class="btn btn-danger btn-sm" disabled>
+                            Rejected
+                        </button>
+                    {% else %}
+                        <button class="btn btn-danger btn-sm">
+                            Reject
+                        </button>
                     {% endif %}
                 </form>
                 {% endif %}
             </td>
         </tr>
+
         {% else %}
         <tr>
-            <td colspan="5" style="text-align: center;">NO NEW COMPANY REGISTRATIONS</td>
+            <td colspan="5" class="text-center">
+                No New Company Registrations
+            </td>
         </tr>
         {% endfor %}
     </table>
-    <hr>
-    <br>
 
-    <h1>Registered Companies</h1>
-    <table>
+    <hr class="my-5">
+
+    <h2 class="mb-3">Registered Companies</h2>
+
+    <table class="table table-bordered table-striped table-hover">
+
         <tr>
-            <th>Name</th>
-            <th>Status</th>
-            <th>View</th>
-            <th>Blacklist</th>
-            <th>De/activate</th>
+                <th>Name</th>
+                <th>Status</th>
+                <th>View</th>
+                <th>Blacklist</th>
+                <th>De/Activate</th>
         </tr>
 
         {% for company in companies %}
         {% if company.company_approval_status.name == 'APPROVED' %}
         <tr>
-            <td>{{ company.company_name }}</td>            
+            <td>{{ company.company_name }}</td>
+
             <td>
                 {{ company.company_approval_status.value }}
-                {% if company.company_isblacklisted %}Blacklisted{% endif %}
-                {% if not company.company_isactive %}Inactive{% endif %}           
+                {% if company.company_isblacklisted %} Blacklisted {% endif %}
+                {% if not company.company_isactive %} Inactive {% endif %}
             </td>
 
             <td>
-                <a href="{{ url_for('admin_company_detail', company_id=company.company_id) }}">View</a>
+                <a class="btn btn-info btn-sm"
+                   href="{{ url_for('admin_company_detail', company_id=company.company_id) }}">
+                   View
+                </a>
             </td>
 
             <td>
-                <form method="POST" style="display:inline;" action="{{ url_for('admin_blacklist_company', company_id=company.company_id) }}">
+                <form method="POST" class="d-inline"
+                      action="{{ url_for('admin_blacklist_company', company_id=company.company_id) }}">
+
                     {% if not company.company_isblacklisted %}
-                        <button style="background-color:gray; color:black;">Blacklist</button>
+                        <button class="btn btn-secondary btn-sm">
+                            Blacklist
+                        </button>
                     {% else %}
-                        <button style="background-color:black; color:white">Blacklisted</button>
+                        <button class="btn btn-dark btn-sm" disabled>
+                            Blacklisted
+                        </button>
                     {% endif %}
                 </form>
             </td>
 
             <td>
-                <form method="POST" style="display:inline;" action="{{ url_for('admin_activate_company', company_id=company.company_id) }}">
+                <form method="POST" class="d-inline"
+                      action="{{ url_for('admin_activate_company', company_id=company.company_id) }}">
+
                     {% if company.company_isactive %}
-                        <button style="background-color:violet; color:black">Deactivate</button>
+                        <button class="btn btn-warning btn-sm">
+                            Deactivate
+                        </button>
                     {% else %}
-                        <button style="background-color:lightblue; color:black">Activate</button>
+                        <button class="btn btn-primary btn-sm">
+                            Activate
+                        </button>
                     {% endif %}
                 </form>
             </td>
@@ -126,7 +183,14 @@
         {% endif %}
         {% endfor %}
     </table>
-    <br><br>
-    <a href="{{ url_for('admin_dashboard') }}">Back to Admin Dashboard</a>
+
+    <div class="mt-4">
+        <a class="btn btn-secondary" href="{{ url_for('admin_dashboard') }}">
+            Back to Admin Dashboard
+        </a>
+    </div>
+
+</div>
+
 </body>
 </html>

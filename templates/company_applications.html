@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>View Applications</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container mt-5"> 
+    
+    <h1 class="text-center mb-4">Applications for {{ drive.job_position.job_title }}</h1>
+
+    <form class="row g-2 mb-3" method="GET" action="{{ url_for('company_applications', drive_id=drive.placement_drive_id) }}">
+        <label>Filter by Status:</label>
+        <select name="status" onchange="this.form.submit()">
+            <option value="">All</option>
+            <option value="APPLIED" {{ 'selected' if current_status == 'APPLIED' else '' }}>Applied</option>
+            <option value="SHORTLISTED" {{ 'selected' if current_status == 'SHORTLISTED' else '' }}>Shortlisted</option>
+            <option value="ACCEPTED" {{ 'selected' if current_status == 'ACCEPTED' else '' }}>Accepted</option>
+            <option value="REJECTED" {{ 'selected' if current_status == 'REJECTED' else '' }}>Rejected</option>
+        </select>
+    </form>
+    <br>
+
+    {% if applications %}
+    <table class="table table-bordered table-striped table-hover">
+        <tr>
+            <th>Name</th>
+            <th>Education</th>
+            <th>Skills</th>
+            <th>View Profile</th>
+            <th>Shortlist</th>
+            <th>Accept</th>
+            <th>Reject</th>
+        </tr>
+        
+        {% for application in applications %}
+        <tr>
+            <td>{{ application.student.student_name }}</td>
+            <td>{{ application.student.student_education }}</td>
+            <td>{{ application.student.student_skills }}</td>
+            <td>
+                <a class="btn btn-info btn-sm" href="{{ url_for('application_detail', application_id=application.application_id) }}">View</a>
+            </td>
+
+            <td>
+                {% if application.application_status.name == 'APPLIED' %}
+                    <form method="POST" action="{{ url_for('shortlist_student', application_id=application.application_id) }}">
+                        <button class="btn btn-warning btn-sm">Shortlist</button>
+                    </form>
+                {% elif application.application_status.name == "SHORTLISTED" %}
+                    <button disabled class="btn btn-primary btn-sm">Shortlisted</button>    
+                {% endif %}
+            </td>
+
+            <td>
+                {% if application.application_status.name in ['APPLIED', 'SHORTLISTED'] %}
+                    <form method="POST" action="{{url_for('accept_student', application_id=application.application_id) }}">
+                        <button class="btn btn-success btn-sm">Accept</button>
+                </form>    
+                {% elif application.application_status.name =='ACCEPTED' %}
+                    <button class="btn btn-success btn-sm">Accepted</button>
+                {% endif %}
+            </td>
+
+            <td>
+                {% if application.application_status.name in ['APPLIED', 'SHORTLISTED'] %}
+                    <form method="POST" action="{{url_for('reject_student', application_id=application.application_id) }}">
+                        <button class="btn btn-danger btn-sm">Reject</button>
+                </form>    
+                {% elif application.application_status.name =='REJECTED' %}
+                    <button class="btn btn-danger btn-sm">Rejected</button>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% endif %}
+    <a class="btn btn-secondary" href="{{ url_for('company_dashboard') }}">Back to company dashboard</a>
+
+    </div>
+</body>
+</html>

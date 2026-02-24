@@ -2,10 +2,15 @@
 <html>
 <head>
     <title>Admin: Applications</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
-    <h1>Student Applications</h1>
-    <form method="GET" action="{{ url_for('admin_applications') }}">
+
+    <div class="container mt-5">
+
+    <h1 class="text-center mb-4">Student Applications</h1>
+
+    <form method="GET" action="{{ url_for('admin_applications') }}" class="row g-3 align-items-center mb-4">
         <label>Filter by Status</label>
         <select name="status" onchange="this.form.submit()">
             <option value="">All</option>
@@ -18,7 +23,7 @@
 
     <br>
     {% if applications %}
-    <table>
+    <table class="table table-bordered-table table-striped table-hover">
         <tr>
             <th>Student Name</th>
             <th>Company Name</th>
@@ -30,16 +35,21 @@
         <tr>
             <td>{{ application.student.student_name }}</td>
             <td>{{ application.placement_drive.company.company_name }}</td>
-            <td>{{ application.placement_drive.job_position.jon_title }}</td>
+            <td>{{ application.placement_drive.job_position.job_title }}</td>
             <td>{{ application.application_status.value }}</td>
         </tr>
         {% endfor %}
     </table>
     {% else %}
-    <p>No applications found.</p>
+
+    <div class="alert alert-info">
+    No applications found.
+    </div>
     {% endif %}
 
     <br><br>
-    <a href="{{ url_for('admin_dashboard') }}">Back to Dashboard</a>
+    <a class="btn btn-secondary" href="{{ url_for('admin_dashboard') }}">Back to Dashboard</a>
+
+    </div>
 </body>
 </html>
