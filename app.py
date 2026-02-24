@@ -403,7 +403,7 @@ def admin_activate_company(company_id):
 #admin: show list of all students + search
 @app.route('/admin_students', methods=['GET'])
 def admin_students():
-        if 'admin_id' not in session:
+    if 'admin_id' not in session:
         return redirect(url_for('login'))
     
     search_query = request.args.get("p","").strip()
@@ -545,32 +545,94 @@ def company_dashboard():
 #COMPANY: VIEW LIST OF APPLICATIONS FOR A CREATED DRIVE + SHORTLIST/ACCEPT/REJECT STUDENTS + FILTERBY APPLICATION STATUS
 @app.route('/company_applications/<int:drive_id>')
 def company_applications(drive_id):
-    return render_template('company_applications.html', company=company, drives=drives)
+    drive = PlacementDrive.query.get_or_404(drive_id)
+
+    if drive.company_id != session.get('company_id'):
+        return redirect(url_for('company_dashboard')) #companies can only view drives which they created.
+
+    #filter by application status
+    status_filter = request.args.get('status')
+    query = Application.query.filter_by(placement_drive_id = drive_id)
+    
+    if status_filter:
+        try:
+            query = query.filter(Application.application_status == ApplicationStatus[status_filter])
+
+        except KeyError:
+            pass #incase of invalid status.
+
+    applications = query.all()
+
+    return render_template('company_applications.html', 
+    drive=drive, applications=applications, current_status = status_filter)
 
 #company: shortlist student 
 @app.route('/shortlist_student/<int:application_id>', methods=['POST'])
 def shortlist_student(application_id):
-        return redirect(url_for('company_applications',drive_id=application.placement_drive_id))
+    if 'company_id' not in session:
+        return redirect(url_for('login'))
+    
+    application = Application.query.get_or_404(application_id)
+    if application.application_status != ApplicationStatus.APPLIED:
+        return redirect(url_for('company_applications', drive_id = application.placement_drive_id))
+    
+    application.application_status = ApplicationStatus.SHORTLISTED
+    db.session.commit()
+
+    return redirect(url_for('company_applications',drive_id=application.placement_drive_id))
 
 #company: accept student
 @app.route('/accept_student/<int:application_id>', methods=['POST'])
 def accept_student(application_id):
+    if 'company_id' not in session:
+        return redirect(url_for('login'))
+    
+    application = Application.query.get_or_404(application_id)
+
+    if application.application_status in (ApplicationStatus.ACCEPTED, ApplicationStatus.REJECTED):
         return redirect(url_for('company_applications',drive_id=application.placement_drive_id))
+
+    application.application_status = ApplicationStatus.ACCEPTED
+    db.session.commit()
+
+    return redirect(url_for('company_applications',drive_id=application.placement_drive_id))
 
 #company: reject students
 @app.route('/reject_student/<int:application_id>', methods=['POST'])
 def reject_student(application_id):
+    if 'company_id' not in session:
+        return redirect(url_for('login'))
+    
+    application = Application.query.get_or_404(application_id)
+
+    if application.application_status in (ApplicationStatus.ACCEPTED, ApplicationStatus.REJECTED):
         return redirect(url_for('company_applications',drive_id=application.placement_drive_id))
+
+    application.application_status = ApplicationStatus.REJECTED
+    db.session.commit()
+
+    return redirect(url_for('company_applications',drive_id=application.placement_drive_id))
 
 #COMPANY: VIEW DETAILED STUDENT APPLICATION
 @app.route('/application_detail/<int:application_id>')
 def application_detail(application_id):
-        return render_template('application_detail.html', application=application)
+    if 'company_id' not in session:
+        return redirect(url_for('login'))
+
+    application = Application.query.get_or_404(application_id)
+
+    return render_template('application_detail.html', application=application)
 
 #company: view student resume in detailed student application
 @app.route('/view_resume/<path:filename>')
 def view_resume(filename):
-    return render_template('company_dashboard.html', application=application)
+    if 'company_id' not in session:
+        return redirect(url_for('login'))
+
+    #app.root_path -> absolute path, os.path.join will build a safe absolute path for resume
+    resume_directory = os.path.join(app.root_path, 'uploads', 'resumes')
+    #this is basically -> goto resume_directory, find filename and send 
+    return send_from_directory(resume_directory, filename, as_attachment=True) 
 
 #company: open/close drives
 @app.route('/toggle_drive_status/<int:drive_id>', methods=['POST'])
@@ -593,9 +655,6 @@ def create_drive():
         return render_template('create_drive.html')
 
 #STUDENT DASHBOARD: show list of approved,applied drives + search (by company, jobpos, skills) 
-@app.route('/student_dashboard')
-def student_dashboard():
-    #STUDENT DASHBOARD: show list of approved,applied drives + search (by company, jobpos, skills) 
 @app.route('/student_dashboard')
 def student_dashboard():
     if 'student_id' not in session:
