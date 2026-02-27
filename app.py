@@ -637,22 +637,108 @@ def view_resume(filename):
 #company: open/close drives
 @app.route('/toggle_drive_status/<int:drive_id>', methods=['POST'])
 def toggle_drive_status(drive_id):
-        return redirect(url_for('company_dashboard'))
+    drive = PlacementDrive.query.get_or_404(drive_id)
+
+    if drive.drive_status == DriveStatus.OPEN:
+        drive.drive_status = DriveStatus.CLOSED 
+
+    elif drive.drive_status == DriveStatus.CLOSED:
+        drive.drive_status = DriveStatus.OPEN  
+    
+    db.session.commit()
+    return redirect(url_for('company_dashboard'))
 
 #company: cancel drive
 @app.route('/cancel_drive/<int:drive_id>', methods=['POST'])
 def cancel_drive(drive_id):
-        return redirect(url_for('company_dashboard'))
+    drive = PlacementDrive.query.get_or_404(drive_id)
+
+    if drive.drive_status in [DriveStatus.OPEN, DriveStatus.CLOSED]:
+        drive.drive_status = DriveStatus.CANCELLED
+        db.session.commit()
+
+    return redirect(url_for('company_dashboard'))
 
 #COMPANY: EDIT DRIVE
 @app.route('/edit_drive/<int:drive_id>', methods=['GET','POST'])
 def edit_drive(drive_id):
+    if 'company_id' not in session:
+        return redirect(url_for('login'))
+    
+    drive = PlacementDrive.query.get_or_404(drive_id)
+
+    if drive.company_id != session.get('company_id'):
         return redirect(url_for('company_dashboard'))
 
+    if request.method=='GET':
+        return render_template('edit_drive.html',drive=drive)
+
+    job = drive.job_position
+    job.job_title = request.form.get('job_title')
+    job.required_skills = request.form.get('required_skills')
+    job.experience_required = request.form.get('experience_required')
+    job.job_description = request.form.get('job_description')
+
+    salary_max = request.form.get('salary_max')
+    salary_min = request.form.get('salary_min')
+
+    job.salary_max = float(salary_max) if salary_max else None
+    job.salary_min = float(salary_min) if salary_min else None
+
+    application_deadline = request.form.get('application_deadline')
+
+    drive.application_deadline = (datetime.fromisoformat(application_deadline) if application_deadline else None)
+    drive.eligibility_criteria = request.form.get('eligibility_criteria')
+
+    db.session.commit()
+    return redirect(url_for('company_dashboard'))
+    
 #COMPANY: CREATRE DRIVE
 @app.route('/create_drive', methods=['GET','POST'])
 def create_drive():
-        return render_template('create_drive.html')
+    company_id = session.get('company_id')
+
+    if not company_id:
+        return redirect(url_for('login')) #failsafe incase company_id = None
+
+    if request.method == 'POST':
+        job_title = request.form.get('job_title')
+        required_skills = request.form.get('required_skills')
+        experience_required = request.form.get('experience_required')
+        salary_min = request.form.get('salary_min')
+        salary_max = request.form.get('salary_max')
+        job_description = request.form.get('job_description')
+
+        job = JobPosition(
+            job_title = job_title,
+            required_skills = required_skills,
+            experience_required = experience_required,
+            salary_min = float(salary_min) if salary_min else None,
+            salary_max = float(salary_max) if salary_max else None,
+            job_description = job_description
+        )
+
+        db.session.add(job)
+        db.session.flush() #will retrieve auto generated id (job pos id in this case) by forcing insert to occur before the commit
+
+        application_deadline = request.form.get('application_deadline')
+        eligibility_criteria = request.form.get('eligibility_criteria')
+
+        drive = PlacementDrive(
+            company_id = company_id,
+            job_position_id = job.job_position_id,
+            drive_status = DriveStatus.PENDING, 
+            application_deadline = datetime.fromisoformat(application_deadline) #fromisoformat will convert string into python datetime object
+            if application_deadline else None,
+            eligibility_criteria = eligibility_criteria
+        )
+
+        db.session.add(drive)
+        db.session.commit()
+        
+        return redirect(url_for('company_dashboard'))
+
+    return render_template('create_drive.html')
 
 #STUDENT DASHBOARD: show list of approved,applied drives + search (by company, jobpos, skills) 
 @app.route('/student_dashboard')
@@ -698,12 +784,83 @@ def student_dashboard():
 #STUDENT: APPLY TO A DRIVE
 @app.route('/student_drive/<int:drive_id>', methods=['GET', 'POST'])
 def student_drive(drive_id):
+    if 'student_id' not in session:
+        return redirect(url_for('login'))
+
+    student_id = session.get('student_id')
+
+    drive = PlacementDrive.query.get_or_404(drive_id)
+
+    if request.method == 'GET':
+        return render_template('student_drive.html', drive=drive)
+
+    existing_application = Application.query.filter_by(
+        student_id = student_id,
+        placement_drive_id = drive_id
+    ).first()
+
+    if existing_application:
+        flash('You have already applied to this drive.')
         return redirect(url_for('student_dashboard'))
+
+    if drive.drive_status != DriveStatus.OPEN:
+        flash('This drive is not longer open.')
+        return redirect(url_for('student_dashboard'))
+    
+    if drive.application_deadline and drive.application_deadline < datetime.now():
+        flash('Application deadline has passed for this drive.')
+        return redirect(url_for('student_dashboard'))
+
+    new_application = Application(student_id=student_id,
+    placement_drive_id=drive_id,
+    application_status=ApplicationStatus.APPLIED
+    )
+
+    db.session.add(new_application)
+    db.session.commit()
+
+    flash('Applied successfully.')
+    return redirect(url_for('student_dashboard'))
 
 #STUDENT: EDIT PROFILE
 @app.route('/student_profile',methods=['GET','POST'])
 def student_profile():
-        return redirect(url_for('student_dashboard'))
+    if 'student_id' not in session:
+        return redirect(url_for('login'))
+
+    student = Student.query.get_or_404(session.get('student_id'))
+
+    if request.method == 'GET':
+        return render_template('student_profile.html', student=student)
+    
+    student.student_name = request.form.get('student_name')
+    student.student_phone = request.form.get('student_phone')
+    student.student_education = request.form.get('student_education')
+    student.student_skills = request.form.get('student_skills')
+
+    resume = request.files.get('resume')
+
+    if resume and resume.filename != "":
+        UPLOAD_FOLDER = "uploads/resumes"
+
+        filename = secure_filename(resume.filename)
+        
+        if not os.path.exists(UPLOAD_FOLDER):
+            os.makedirs(UPLOAD_FOLDER)
+
+        #remove the old student resume path if it exists
+        if student.student_resume_path:
+            old_path = os.path.join(UPLOAD_FOLDER, student.student_resume_path)
+            if os.path.exists(old_path):
+                os.remove(old_path)
+        
+        save_path = os.path.join(UPLOAD_FOLDER,filename)
+        resume.save(save_path)
+
+        student.student_resume_path = filename
+
+    db.session.commit()
+    return redirect(url_for('student_dashboard'))
 
 #STUDENT: VIEW PLACEMENT HISTORY
 @app.route('/placement_history')
