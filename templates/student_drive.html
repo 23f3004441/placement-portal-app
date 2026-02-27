@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Apply to Drive</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">         
+        
+        <h1 class="text-center mb-4">Job Details</h1>
+        <p><b>Company:</b>{{ drive.company.company_name }}</p>
+        <p><b>Job Title:</b>{{ drive.job_position.job_title }}</p>
+        <p><b>Required Skills:</b>{{ drive.job_position.required_skills }}</p>
+        <p><b>Experience Required:</b>{{ drive.job_position.experience_required }}</p>
+        <p><b>Eligibility Criteria:</b>{{ drive.eligibility_criteria }}</p>
+        <p><b>Application Deadline:</b>{{ drive.application_deadline.strftime('%d-%m-%Y') if drive.application_deadline else 'N/A' }}</p>
+
+    <form method="POST" action="{{ url_for('student_drive', drive_id = drive.placement_drive_id) }}">
+        <button class="btn btn-primary" type="submit">Apply</button>
+    </form>
+
+    <div class="mt-3">
+    <a class="btn btn-secondary" href="{{ url_for('student_dashboard') }}">Cancel</a>
+    </div>
+
+    </div>
+</body>
+</html>

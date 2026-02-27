@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Create Placement Drive</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5"> 
+
+    <h1 class="text-center mb-4">Create New Placement Drive</h1>
+    <form method="POST" class="row g-2 mb-3">
+        <h2 class="mt-4 mb-3">Job Position Details</h2>
+        
+        <div class="mb-3">
+        <label class="form-label">
+            Job Title: 
+            <input type="text" name="job_title" required>
+        </label>
+        </div>
+
+        <div class="mb-3">
+        <label class="form-label">
+            Skills Required:
+            <textarea name="required_skills" placeholder="Ex: Python, SQL, Java.."></textarea> 
+        </label>
+        </div>
+        
+        <div class="mb-3">
+        <label class="form-label">
+            Experience Required:
+            <input type="text"  name="experience_required" placeholder="Ex: 3 years">
+        </label>
+        </div>
+
+        <div class="mb-3">
+        <label class="form-label">
+            Salary Range:
+            <input type="number" step="0.01" name="salary_min" placeholder="Minimum">
+            <input type="number" step="0.01" name="salary_max" placeholder="Maximum">
+        </label>
+        </div>
+
+        <div class="mb-3">
+        <label class="form-label">
+            Job Description:
+            <textarea name="job_description"></textarea>
+        </label>
+        </div>
+
+        <div class="mb-3">
+        <label class="form-label">
+            Application Deadline:
+            <input type="datetime-local" name="application_deadline">
+        </label>
+        </div>
+
+        <div class="mb-3">
+        <label class="form-label">
+            Eligibility Criteria:
+            <textarea name="eligibility_criteria"></textarea>
+        </label>
+        </div>
+
+        <button class="btn btn-primary" type="submit">Create Drive</button>
+        <a class="btn btn-secondary" href="{{ url_for('company_dashboard') }}">Cancel</a>
+
+    </form>
+
+    </div>
+</body>
+</html>
