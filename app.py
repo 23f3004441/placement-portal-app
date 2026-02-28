@@ -865,7 +865,15 @@ def student_profile():
 #STUDENT: VIEW PLACEMENT HISTORY
 @app.route('/placement_history')
 def placement_history():
-        return render_template('placement_history.html', placements = placements)
+    if 'student_id' not in session:
+        return redirect(url_for('login'))
+    
+    student_id = session.get('student_id')
+
+    placements = Application.query.filter(Application.student_id == student_id,
+    Application.application_status == ApplicationStatus.ACCEPTED).all()
+
+    return render_template('placement_history.html', placements = placements)
 
 #LOGOUT
 @app.route('/logout')
