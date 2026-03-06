@@ -370,17 +370,25 @@ def admin_reject_company(company_id):
 
     return redirect(url_for('admin_companies'))
 
-#admin: blacklist/unblacklist company
+#admin: blacklist company + cancel drives if company blacklisted
 @app.route('/admin_blacklist_company/<int:company_id>', methods=['POST'])
 def admin_blacklist_company(company_id):
     company = Company.query.get_or_404(company_id)
 
     if company.company_isblacklisted:
         company.company_isblacklisted = False
-
+    
     else:
         company.company_isblacklisted = True
         company.company_isactive = False
+
+        active_drives = PlacementDrive.query.filter(
+            PlacementDrive.company_id == company_id,
+            PlacementDrive.drive_status.in_([DriveStatus.OPEN, DriveStatus.PENDING])
+        ).all()
+
+        for drive in active_drives:
+            drive.drive_status = DriveStatus.CANCELLED
 
     db.session.commit()
 
@@ -428,7 +436,7 @@ def admin_students():
     students=students,
     message=message,
     search_query=search_query )    
- 
+
 #ADMIN: VIEW STUDENT DETAILS
 @app.route('/admin_student_detail/<int:student_id>')
 def admin_student_detail(student_id):
@@ -472,6 +480,20 @@ def admin_activate_student(student_id):
 def admin_drives():
     if 'admin_id' not in session:
         return redirect(url_for('login'))
+
+    now = datetime.now()
+
+    #close drives whose deadline ahs passed already
+    expired_drives = PlacementDrive.query.filter(
+        PlacementDrive.application_deadline != None,
+        PlacementDrive.application_deadline < now,
+        PlacementDrive.drive_status == DriveStatus.OPEN
+    ).all()
+
+    for drive in expired_drives:
+        drive.drive_status = DriveStatus.CLOSED
+
+    db.session.commit()
     
     drives = PlacementDrive.query.all()
     return render_template('admin_drives.html', drives=drives)    
@@ -633,7 +655,7 @@ def view_resume(filename):
     resume_directory = os.path.join(app.root_path, 'uploads', 'resumes')
     #this is basically -> goto resume_directory, find filename and send 
     return send_from_directory(resume_directory, filename, as_attachment=True) 
-
+    
 #company: open/close drives
 @app.route('/toggle_drive_status/<int:drive_id>', methods=['POST'])
 def toggle_drive_status(drive_id):
